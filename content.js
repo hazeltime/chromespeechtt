@@ -3,6 +3,8 @@ recognition.continuous = false;
 recognition.interimResults = false;
 recognition.lang = 'en-US';
 
+let isRecording = false;
+
 recognition.onresult = function (event) {
     let transcript = event.results[0][0].transcript;
     let inputBox = document.querySelector("textarea");
@@ -13,9 +15,20 @@ recognition.onresult = function (event) {
     }
 };
 
+recognition.onend = function () {
+    isRecording = false;
+    console.log("Speech recognition stopped.");
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.command === "start-speech-to-text") {
-        recognition.start();
-        sendResponse({ status: "started" });
+    if (message.command === "toggle-speech-to-text") {
+        if (isRecording) {
+            recognition.stop();
+            sendResponse({ status: "stopped" });
+        } else {
+            recognition.start();
+            isRecording = true;
+            sendResponse({ status: "started" });
+        }
     }
 });

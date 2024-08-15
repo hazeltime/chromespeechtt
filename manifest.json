@@ -24,7 +24,7 @@
       "suggested_key": {
         "default": "Ctrl+Shift+S"
       },
-      "description": "Start speech to text"
+      "description": "Start/Stop speech to text"
     }
   }
 }
