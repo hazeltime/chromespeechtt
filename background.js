@@ -1,3 +1,4 @@
+// background.js
 chrome.commands.onCommand.addListener((command) => {
     if (command === "start-speech-to-text") {
         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -11,3 +12,4 @@ chrome.commands.onCommand.addListener((command) => {
         });
     }
 });
+

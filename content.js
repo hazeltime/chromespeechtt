@@ -1,3 +1,4 @@
+// content.js
 let recognition;
 let isRecording = false;
 
@@ -48,3 +49,4 @@ chrome.storage.sync.get(['selectedLanguage'], function (result) {
     console.log('Initializing speech recognition with language:', language);
     initSpeechRecognition(language);
 });
+

@@ -1,3 +1,4 @@
+// popup.js
 document.addEventListener('DOMContentLoaded', function () {
     const languageSelect = document.getElementById('languageSelect');
     const saveButton = document.getElementById('saveButton');
@@ -18,3 +19,4 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
