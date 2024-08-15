@@ -24,7 +24,7 @@ function initSpeechRecognition(language) {
     };
 }
 
-// Hämta användarens språkval från lagring
+// Hämta användarens språkval från lagring och initiera röstigenkänning
 chrome.storage.sync.get(['selectedLanguage'], function (result) {
     const language = result.selectedLanguage || 'en-US'; // Default till engelska om inget valts
     initSpeechRecognition(language);
@@ -41,4 +41,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({ status: "started" });
         }
     }
+});
+
+chrome.storage.sync.get(['selectedLanguage'], function (result) {
+    const language = result.selectedLanguage || 'en-US';
+    console.log('Initializing speech recognition with language:', language);
+    initSpeechRecognition(language);
 });
