@@ -1,24 +1,34 @@
-let recognition = new webkitSpeechRecognition();
-recognition.continuous = false;
-recognition.interimResults = false;
-recognition.lang = 'en-US';
-
+let recognition;
 let isRecording = false;
 
-recognition.onresult = function (event) {
-    let transcript = event.results[0][0].transcript;
-    let inputBox = document.querySelector("textarea");
-    if (inputBox) {
-        inputBox.value = transcript;
-    } else {
-        alert("Input box not found!");
-    }
-};
+// Funktion för att initiera röstigenkänning med rätt språk
+function initSpeechRecognition(language) {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = language;
 
-recognition.onend = function () {
-    isRecording = false;
-    console.log("Speech recognition stopped.");
-};
+    recognition.onresult = function (event) {
+        let transcript = event.results[0][0].transcript;
+        let inputBox = document.querySelector("textarea");
+        if (inputBox) {
+            inputBox.value = transcript;
+        } else {
+            alert("Input box not found!");
+        }
+    };
+
+    recognition.onend = function () {
+        isRecording = false;
+        console.log("Speech recognition stopped.");
+    };
+}
+
+// Hämta användarens språkval från lagring
+chrome.storage.sync.get(['selectedLanguage'], function (result) {
+    const language = result.selectedLanguage || 'en-US'; // Default till engelska om inget valts
+    initSpeechRecognition(language);
+});
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.command === "toggle-speech-to-text") {
