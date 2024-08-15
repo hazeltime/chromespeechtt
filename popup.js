@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.storage.sync.get(['selectedLanguage'], function (result) {
         if (result.selectedLanguage) {
             languageSelect.value = result.selectedLanguage;
+        } else {
+            languageSelect.value = 'sv-SE'; // Sätt svenska som standard om inget är valt
         }
     });
 
