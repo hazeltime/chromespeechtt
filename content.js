@@ -1,4 +1,3 @@
-// content.js
 // Funktion för att ändra språk- och dialekt-dropdown-menyerna på Web Speech API-sidan
 function changeLanguage(languageIndex, dialectValue) {
     // Hitta språkmenyn och dialektmenyn
@@ -20,34 +19,37 @@ function changeLanguage(languageIndex, dialectValue) {
     }
 }
 
-// Hämta användarens språkval från lagring och ändra dropdown-menyerna på sidan
-chrome.storage.sync.get(['selectedLanguage'], function (result) {
-    let languageCode = result.selectedLanguage || 'en-US';
-    let languageIndex;
-    let dialectValue;
+// Vänta tills hela sidan är laddad
+window.addEventListener('load', function () {
+    // Hämta användarens språkval från lagring och ändra dropdown-menyerna på sidan
+    chrome.storage.sync.get(['selectedLanguage'], function (result) {
+        let languageCode = result.selectedLanguage || 'en-US';
+        let languageIndex;
+        let dialectValue;
 
-    // Kolla vilket språk som valts och ställ in rätt index och dialekt
-    switch (languageCode) {
-        case 'sv-SE':
-            languageIndex = 41; // Svenskans index i språkmenyn (baserat på HTML-koden)
-            dialectValue = 'sv-SE';
-            break;
-        case 'en-US':
-            languageIndex = 10; // Engelska som standard
-            dialectValue = 'en-US';
-            break;
-        // Lägg till fler språk och dialekter om du vill stödja fler alternativ
-        default:
-            languageIndex = 10;
-            dialectValue = 'en-US';
-            break;
-    }
+        // Kolla vilket språk som valts och ställ in rätt index och dialekt
+        switch (languageCode) {
+            case 'sv-SE':
+                languageIndex = 41; // Svenskans index i språkmenyn (baserat på HTML-koden)
+                dialectValue = 'sv-SE';
+                break;
+            case 'en-US':
+                languageIndex = 10; // Engelska som standard
+                dialectValue = 'en-US';
+                break;
+            // Lägg till fler språk och dialekter om du vill stödja fler alternativ
+            default:
+                languageIndex = 10;
+                dialectValue = 'en-US';
+                break;
+        }
 
-    // Ändra språkinställningarna på sidan
-    changeLanguage(languageIndex, dialectValue);
+        // Ändra språkinställningarna på sidan
+        changeLanguage(languageIndex, dialectValue);
 
-    // Initiera röstigenkänning med rätt språk
-    initSpeechRecognition(languageCode);
+        // Initiera röstigenkänning med rätt språk
+        initSpeechRecognition(languageCode);
+    });
 });
 
 let recognition;
