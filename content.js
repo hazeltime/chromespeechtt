@@ -1,25 +1,25 @@
 // Function to change language and dialect dropdowns on the Web Speech API page
-function changeLanguage(languageIndex, dialectValue) {
+function changeLanguage(languageIndex, dialectValue, attempts = 5) {
     // Find the language and dialect dropdowns
     let languageDropdown = document.querySelector('select#select_language');
     let dialectDropdown = document.querySelector('select#select_dialect');
 
-    if (languageDropdown) {
+    if (languageDropdown && dialectDropdown) {
         // Change the language dropdown to the correct language
         languageDropdown.selectedIndex = languageIndex;
         languageDropdown.dispatchEvent(new Event('change'));
-    }
 
-    if (dialectDropdown) {
         // Change the dialect dropdown to the correct dialect
         dialectDropdown.value = dialectValue;
         dialectDropdown.dispatchEvent(new Event('change'));
-    }
 
-    if (!languageDropdown || !dialectDropdown) {
-        console.warn("Language or dialect dropdown not found on the page. Skipping language change.");
-    } else {
         console.log(`Language set to index ${languageIndex}, dialect set to ${dialectValue}.`);
+    } else if (attempts > 0) {
+        // Retry after a short delay
+        console.warn("Language or dialect dropdown not found. Retrying...");
+        setTimeout(() => changeLanguage(languageIndex, dialectValue, attempts - 1), 500);
+    } else {
+        console.error("Language or dialect dropdown not found after several attempts. Skipping language change.");
     }
 }
 
@@ -48,7 +48,7 @@ window.addEventListener('load', function () {
                 break;
         }
 
-        // Change the language settings on the page
+        // Try to change the language settings on the page
         changeLanguage(languageIndex, dialectValue);
 
         // Initialize speech recognition with the correct language
