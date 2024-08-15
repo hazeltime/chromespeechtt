@@ -1,45 +1,105 @@
-// Function to change language and dialect dropdowns on the Web Speech API page
-function changeLanguage(languageIndex, dialectValue, attempts = 5) {
-    // Find the language and dialect dropdowns
-    let languageDropdown = document.querySelector('select#select_language');
-    let dialectDropdown = document.querySelector('select#select_dialect');
+// content.js: Script to manage language and speech recognition settings for ChatGPT
 
-    if (languageDropdown && dialectDropdown) {
-        // Log the found dropdowns
+// Function to wait for an element to be available in the DOM
+function waitForElement(selector, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const intervalTime = 500;
+        let elapsedTime = 0;
+
+        const interval = setInterval(() => {
+            const element = document.querySelector(selector);
+            if (element) {
+                clearInterval(interval);
+                resolve(element);
+            } else if (elapsedTime >= timeout) {
+                clearInterval(interval);
+                reject(new Error(`Element ${selector} not found within timeout`));
+            }
+            elapsedTime += intervalTime;
+        }, intervalTime);
+    });
+}
+
+// Function to change language and dialect dropdowns on the Web Speech API page
+async function changeLanguage(languageIndex, dialectValue) {
+    try {
+        const languageDropdown = await waitForElement('select#select_language');
+        const dialectDropdown = await waitForElement('select#select_dialect');
+
         console.log("Language dropdown found:", languageDropdown);
         console.log("Dialect dropdown found:", dialectDropdown);
 
-        // Change the language dropdown to the correct language
         console.log(`Setting language to index ${languageIndex}`);
         languageDropdown.selectedIndex = languageIndex;
         languageDropdown.dispatchEvent(new Event('change'));
 
-        // Change the dialect dropdown to the correct dialect
         console.log(`Setting dialect to ${dialectValue}`);
         dialectDropdown.value = dialectValue;
         dialectDropdown.dispatchEvent(new Event('change'));
 
         console.log(`Language set to index ${languageIndex}, dialect set to ${dialectValue}.`);
-    } else if (attempts > 0) {
-        // Retry after a short delay
-        console.warn("Language or dialect dropdown not found. Retrying...");
-        setTimeout(() => changeLanguage(languageIndex, dialectValue, attempts - 1), 500);
-    } else {
-        console.error("Language or dialect dropdown not found after several attempts. Skipping language change.");
+
+        return true;
+    } catch (error) {
+        console.error(error.message);
+        return false;
     }
 }
 
-// Wait until the entire page is loaded
+// Function to initialize speech recognition with the correct language
+function initSpeechRecognition(language) {
+    console.log(`Initializing speech recognition with language: ${language}`);
+    const recognition = new webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = language;
+
+    recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        console.log("Speech recognition result:", transcript);
+        const inputBox = document.querySelector("textarea");
+        if (inputBox) {
+            inputBox.value = transcript;
+        } else {
+            alert("Input box not found!");
+        }
+    };
+
+    recognition.onend = function () {
+        console.log("Speech recognition stopped.");
+    };
+
+    return recognition;
+}
+
+// Listener for messages from the extension background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.command === "toggle-speech-to-text") {
+        const recognition = initSpeechRecognition(message.language);
+        if (recognition) {
+            if (recognition.isRecording) {
+                console.log("Stopping speech recognition...");
+                recognition.stop();
+                sendResponse({ status: "stopped" });
+            } else {
+                console.log("Starting speech recognition...");
+                recognition.start();
+                recognition.isRecording = true;
+                sendResponse({ status: "started" });
+            }
+        }
+    }
+});
+
+// Wait until the entire page is loaded and then attempt to set language
 window.addEventListener('load', function () {
     console.log("Page loaded. Attempting to set language...");
 
-    // Get the user's selected language from storage and change the dropdowns on the page
-    chrome.storage.sync.get(['selectedLanguage'], function (result) {
-        let languageCode = result.selectedLanguage || 'en-US';
+    chrome.storage.sync.get(['selectedLanguage'], async function (result) {
+        const languageCode = result.selectedLanguage || 'en-US';
         let languageIndex;
         let dialectValue;
 
-        // Determine the correct index and dialect based on the selected language
         switch (languageCode) {
             case 'sv-SE':
                 languageIndex = 41; // Swedish language index in the dropdown
@@ -59,53 +119,11 @@ window.addEventListener('load', function () {
                 break;
         }
 
-        // Try to change the language settings on the page
-        changeLanguage(languageIndex, dialectValue);
-
-        // Initialize speech recognition with the correct language
-        initSpeechRecognition(languageCode);
+        const success = await changeLanguage(languageIndex, dialectValue);
+        if (success) {
+            console.log(`Language successfully changed to ${languageCode}`);
+        } else {
+            console.log(`Failed to change language to ${languageCode}`);
+        }
     });
-});
-
-let recognition;
-let isRecording = false;
-
-// Function to initialize speech recognition with the correct language
-function initSpeechRecognition(language) {
-    console.log(`Initializing speech recognition with language: ${language}`);
-    recognition = new webkitSpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = language;
-
-    recognition.onresult = function (event) {
-        let transcript = event.results[0][0].transcript;
-        console.log("Speech recognition result:", transcript);
-        let inputBox = document.querySelector("textarea");
-        if (inputBox) {
-            inputBox.value = transcript;
-        } else {
-            alert("Input box not found!");
-        }
-    };
-
-    recognition.onend = function () {
-        isRecording = false;
-        console.log("Speech recognition stopped.");
-    };
-}
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.command === "toggle-speech-to-text") {
-        if (isRecording) {
-            console.log("Stopping speech recognition...");
-            recognition.stop();
-            sendResponse({ status: "stopped" });
-        } else {
-            console.log("Starting speech recognition...");
-            recognition.start();
-            isRecording = true;
-            sendResponse({ status: "started" });
-        }
-    }
 });

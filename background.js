@@ -1,15 +1,25 @@
 // background.js
-chrome.commands.onCommand.addListener((command) => {
-    if (command === "start-speech-to-text") {
-        chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, { command: "toggle-speech-to-text" }, function (response) {
-                if (chrome.runtime.lastError) {
-                    console.error("Could not send message: ", chrome.runtime.lastError.message);
-                } else {
-                    console.log("Speech recognition toggled:", response.status);
-                }
-            });
-        });
+
+let dropdownData = {};
+
+// Listen for messages from content scripts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action === 'sendDropdowns') {
+        // Store the dropdown HTML data sent from the content script
+        dropdownData.languageDropdownHTML = message.languageDropdownHTML;
+        dropdownData.dialectDropdownHTML = message.dialectDropdownHTML;
+        console.log("Dropdown data received and stored:", dropdownData);
+
+        // Acknowledge receipt
+        sendResponse({ status: "success", message: "Dropdowns received and stored" });
+    }
+
+    if (message.action === 'getDropdowns') {
+        // Send the stored dropdown HTML data to the popup script
+        sendResponse(dropdownData);
+        console.log("Dropdown data sent to popup:", dropdownData);
     }
 });
 
+// Logging when the background script is loaded
+console.log("Background script loaded and waiting for messages.");
