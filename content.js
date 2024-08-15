@@ -1,53 +1,57 @@
-// Funktion för att ändra språk- och dialekt-dropdown-menyerna på Web Speech API-sidan
+// Function to change language and dialect dropdowns on the Web Speech API page
 function changeLanguage(languageIndex, dialectValue) {
-    // Hitta språkmenyn och dialektmenyn
+    // Find the language and dialect dropdowns
     let languageDropdown = document.querySelector('select#select_language');
     let dialectDropdown = document.querySelector('select#select_dialect');
 
-    if (languageDropdown && dialectDropdown) {
-        // Ändra språkmenyn till rätt språk
+    if (languageDropdown) {
+        // Change the language dropdown to the correct language
         languageDropdown.selectedIndex = languageIndex;
         languageDropdown.dispatchEvent(new Event('change'));
+    }
 
-        // Ändra dialektmenyn till rätt dialekt
+    if (dialectDropdown) {
+        // Change the dialect dropdown to the correct dialect
         dialectDropdown.value = dialectValue;
         dialectDropdown.dispatchEvent(new Event('change'));
+    }
 
-        console.log(`Language set to index ${languageIndex}, dialect set to ${dialectValue}.`);
+    if (!languageDropdown || !dialectDropdown) {
+        console.warn("Language or dialect dropdown not found on the page. Skipping language change.");
     } else {
-        console.error("Language or dialect dropdown not found on the page.");
+        console.log(`Language set to index ${languageIndex}, dialect set to ${dialectValue}.`);
     }
 }
 
-// Vänta tills hela sidan är laddad
+// Wait until the entire page is loaded
 window.addEventListener('load', function () {
-    // Hämta användarens språkval från lagring och ändra dropdown-menyerna på sidan
+    // Get the user's selected language from storage and change the dropdowns on the page
     chrome.storage.sync.get(['selectedLanguage'], function (result) {
         let languageCode = result.selectedLanguage || 'en-US';
         let languageIndex;
         let dialectValue;
 
-        // Kolla vilket språk som valts och ställ in rätt index och dialekt
+        // Determine the correct index and dialect based on the selected language
         switch (languageCode) {
             case 'sv-SE':
-                languageIndex = 41; // Svenskans index i språkmenyn (baserat på HTML-koden)
+                languageIndex = 41; // Swedish language index in the dropdown
                 dialectValue = 'sv-SE';
                 break;
             case 'en-US':
-                languageIndex = 10; // Engelska som standard
+                languageIndex = 10; // English as default
                 dialectValue = 'en-US';
                 break;
-            // Lägg till fler språk och dialekter om du vill stödja fler alternativ
+            // Add more languages and dialects if you want to support more options
             default:
                 languageIndex = 10;
                 dialectValue = 'en-US';
                 break;
         }
 
-        // Ändra språkinställningarna på sidan
+        // Change the language settings on the page
         changeLanguage(languageIndex, dialectValue);
 
-        // Initiera röstigenkänning med rätt språk
+        // Initialize speech recognition with the correct language
         initSpeechRecognition(languageCode);
     });
 });
@@ -55,7 +59,7 @@ window.addEventListener('load', function () {
 let recognition;
 let isRecording = false;
 
-// Funktion för att initiera röstigenkänning med rätt språk
+// Function to initialize speech recognition with the correct language
 function initSpeechRecognition(language) {
     recognition = new webkitSpeechRecognition();
     recognition.continuous = false;
